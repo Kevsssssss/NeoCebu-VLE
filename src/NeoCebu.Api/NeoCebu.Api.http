@@ -1,0 +1,6 @@
+@NeoCebu.Api_HostAddress = http://localhost:5197
+
+GET {{NeoCebu.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

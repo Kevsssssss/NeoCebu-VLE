@@ -1,0 +1,24 @@
+# How to Run the NeoCebu Project
+
+This project consists of an ASP.NET Core backend (API) and a React/Vite frontend.
+
+## Prerequisites
+- .NET 10.0 SDK
+- Node.js (LTS version recommended)
+
+## Running the Backend (API)
+1. Navigate to the project root directory in your terminal.
+2. Go to the API folder: `cd src/NeoCebu.Api`
+3. Run the API: `dotnet run`
+   - The API will start, typically on `https://localhost:5001` or `http://localhost:5000`.
+
+## Running the Frontend (Web)
+1. In a new terminal window, navigate to the project root directory.
+2. Go to the web folder: `cd src/NeoCebu.Web`
+3. Install dependencies: `npm install`
+4. Start the development server: `npm run dev`
+   - The frontend will typically be available at `http://localhost:5173`.
+
+## Notes
+- Ensure both the backend and frontend are running simultaneously for full functionality.
+- The backend must be running for the API requests from the frontend to succeed.

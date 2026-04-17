@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NeoCebu.Api/NeoCebu.Api.csproj" />
+    <Project Path="src/NeoCebu.Core/NeoCebu.Core.csproj" />
+    <Project Path="src/NeoCebu.Infrastructure/NeoCebu.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NeoCebu.Tests/NeoCebu.Tests.csproj" />
+  </Folder>
+</Solution>
