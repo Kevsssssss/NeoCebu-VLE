@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NeoCebu.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+948082879ca93e856262782a1d33c3c16b985ea0")]
 [assembly: System.Reflection.AssemblyProductAttribute("NeoCebu.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NeoCebu.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

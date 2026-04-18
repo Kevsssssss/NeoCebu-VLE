@@ -15,3 +15,4 @@ C:\Users\Kevs\Desktop\IAS_Project\src\NeoCebu.Infrastructure\obj\Debug\net10.0\r
 C:\Users\Kevs\Desktop\IAS_Project\src\NeoCebu.Infrastructure\obj\Debug\net10.0\NeoCebu.Infrastructure.pdb
 C:\Users\Kevs\Desktop\IAS_Project\src\NeoCebu.Infrastructure\obj\Debug\net10.0\NeoCebu.Infrastructure.genruntimeconfig.cache
 C:\Users\Kevs\Desktop\IAS_Project\src\NeoCebu.Infrastructure\obj\Debug\net10.0\ref\NeoCebu.Infrastructure.dll
+C:\Users\Kevs\Desktop\IAS_Project\src\NeoCebu.Infrastructure\obj\Debug\net10.0\NeoCebu.Infrastructure.sourcelink.json
