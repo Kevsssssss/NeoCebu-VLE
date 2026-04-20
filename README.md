@@ -21,7 +21,7 @@ Neo-Cebu 2026 is a high-security, context-aware Virtual Learning Environment (VL
 ## 📂 Project Structure
 
 ```text
-C:\Users\Kevs\Desktop\IAS_Project\
+C:\NeoCebu-VLE\
 ├── src/
 │   ├── NeoCebu.Api/             # ASP.NET Core Web API project (Endpoints & Hubs)
 │   │   ├── Controllers/         # API Controllers for Auth, Admin, and Classrooms
