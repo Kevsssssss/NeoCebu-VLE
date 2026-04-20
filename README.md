@@ -58,6 +58,10 @@ C:\NeoCebu-VLE\
    - The frontend will be served via HTTPS on port `5173`.
    - Access from mobile using `https://<YOUR_IP>:5173`.
 
+### Default Admin Account
+- **Username**: admin@neocebu.com
+- **Password**: Admin123!
+
 ## 🛡 Security Protocols
 
 - **Admin Secret**: Educator registration is protected by an institutional master key.
