@@ -18,6 +18,28 @@ Neo-Cebu 2026 is a high-security, context-aware Virtual Learning Environment (VL
 - **Frontend**: React 18, Vite, TypeScript, Lucide Icons.
 - **Tools**: Html5-Qrcode, Jitsi Meet API, Axios.
 
+## 📂 Project Structure
+
+```text
+C:\Users\Kevs\Desktop\IAS_Project\
+├── src/
+│   ├── NeoCebu.Api/             # ASP.NET Core Web API project (Endpoints & Hubs)
+│   │   ├── Controllers/         # API Controllers for Auth, Admin, and Classrooms
+│   │   ├── Hubs/                # SignalR Hubs for real-time chat and signaling
+│   │   └── Middleware/          # Custom security & session timeout middleware
+│   ├── NeoCebu.Core/            # Core business logic, Entities, and Interfaces
+│   │   ├── Entities/            # Database models (User, Classroom, Chat, etc.)
+│   │   └── DTOs/                # Data Transfer Objects for API contracts
+│   ├── NeoCebu.Infrastructure/  # Data access and external service implementations
+│   │   ├── Data/                # Entity Framework DbContext and Migrations
+│   │   └── Services/            # Business service implementations
+│   └── NeoCebu.Web/             # React (Vite) Frontend application
+│       ├── src/pages/           # Main UI views (Landing, Auth, Dashboard, Classroom)
+│       ├── src/context/         # Authentication and Global state providers
+│       └── src/hooks/           # Custom React hooks (e.g., SignalR integration)
+└── tests/                       # Unit and Integration test projects
+```
+
 ## 🏁 Getting Started
 
 ### Prerequisites
