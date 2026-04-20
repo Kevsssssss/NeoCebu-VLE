@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using NeoCebu.Core.Entities;
 using NeoCebu.Infrastructure.Data;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 
 namespace NeoCebu.Api.Controllers;
 
@@ -51,20 +52,39 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("settings")]
-    public IActionResult GetSettings()
+    public async Task<IActionResult> GetSettings()
     {
+        var secret = await _context.SystemSettings.FindAsync("AdminSecret");
+        var value = secret?.Value ?? _configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure";
+        Console.WriteLine($"[AdminController] GetSettings: {value} (Source: {(secret == null ? "Config" : "DB")})");
         return Ok(new {
-            adminSecret = _configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure"
+            adminSecret = value
         });
     }
 
     [HttpPost("settings/secret")]
-    public IActionResult UpdateSecret([FromBody] UpdateSecretRequest request)
+    public async Task<IActionResult> UpdateSecret([FromBody] UpdateSecretRequest request)
     {
-        // In a real app, this would be saved to a database table or persistent config
-        // For this prototype, we'll acknowledge the request. 
-        // Note: IConfiguration is read-only at runtime usually.
-        return Ok(new { message = "Secret updated (Note: In this prototype, changes are transient)." });
+        if (string.IsNullOrWhiteSpace(request.NewSecret))
+        {
+            return BadRequest(new { message = "Secret cannot be empty." });
+        }
+
+        Console.WriteLine($"[AdminController] Updating AdminSecret to: {request.NewSecret}");
+        var secret = await _context.SystemSettings.FindAsync("AdminSecret");
+        if (secret == null)
+        {
+            _context.SystemSettings.Add(new SystemSetting { Key = "AdminSecret", Value = request.NewSecret });
+            Console.WriteLine("[AdminController] Added new AdminSecret record.");
+        }
+        else
+        {
+            secret.Value = request.NewSecret;
+            Console.WriteLine("[AdminController] Updated existing AdminSecret record.");
+        }
+        
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Security protocol updated successfully." });
     }
 
     [HttpGet("classrooms")]
@@ -116,5 +136,12 @@ public class AdminController : ControllerBase
     }
 }
 
-public record UpdateSecretRequest(string NewSecret);
-public record UpdateAdminAccountRequest(string? NewUserName, string? NewEmail, string? NewPassword);
+public record UpdateSecretRequest(
+    [property: JsonPropertyName("newSecret")] string NewSecret
+);
+
+public record UpdateAdminAccountRequest(
+    [property: JsonPropertyName("newUserName")] string? NewUserName,
+    [property: JsonPropertyName("newEmail")] string? NewEmail,
+    [property: JsonPropertyName("newPassword")] string? NewPassword
+);

@@ -69,6 +69,9 @@ const AdminDashboard: React.FC = () => {
     try {
       await api.post('/admin/settings/secret', { newSecret: adminSecret });
       setMessage('Security protocol updated.');
+      // Re-fetch to confirm and sync state
+      const res = await api.get('/admin/settings');
+      setAdminSecret(res.data.adminSecret);
       setTimeout(() => setMessage(''), 3000);
     } catch (err) { console.error('Update failed', err); }
   };

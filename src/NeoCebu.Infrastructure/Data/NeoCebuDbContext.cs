@@ -12,10 +12,15 @@ public class NeoCebuDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ClassroomEnrollment> Enrollments { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<BlackboardItem> BlackboardItems { get; set; } = null!;
+    public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Configure SystemSettings
+        builder.Entity<SystemSetting>()
+            .HasKey(s => s.Key);
 
         // Configure Many-to-Many via Join Entity
         builder.Entity<ClassroomEnrollment>()

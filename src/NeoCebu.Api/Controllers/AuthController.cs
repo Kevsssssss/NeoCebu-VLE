@@ -18,17 +18,20 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITeacherService _teacherService;
     private readonly IConfiguration _configuration;
+    private readonly NeoCebu.Infrastructure.Data.NeoCebuDbContext _context;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ITeacherService teacherService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        NeoCebu.Infrastructure.Data.NeoCebuDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _teacherService = teacherService;
         _configuration = configuration;
+        _context = context;
     }
 
     [HttpPost("student-login")]
@@ -112,8 +115,11 @@ public class AuthController : ControllerBase
     [HttpPost("register-teacher")]
     public async Task<IActionResult> RegisterTeacher([FromBody] TeacherRegistrationRequest request)
     {
-        var configuredSecret = _configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure";
+        var dbSecret = await _context.SystemSettings.FindAsync("AdminSecret");
+        var configuredSecret = dbSecret?.Value ?? _configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure";
         
+        Console.WriteLine($"[AuthController] RegisterTeacher: Received secret '{request.AdminSecret}', Expected '{configuredSecret}' (Source: {(dbSecret == null ? "Config" : "DB")})");
+
         if (request.AdminSecret?.Trim() != configuredSecret)
         {
             return BadRequest(new { message = "Invalid admin authorization secret." });

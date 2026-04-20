@@ -158,6 +158,15 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("Admin password sync successful.");
         }
     }
+
+    // Seed Initial System Settings
+    if (!await db.SystemSettings.AnyAsync(s => s.Key == "AdminSecret"))
+    {
+        var initialSecret = builder.Configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure";
+        db.SystemSettings.Add(new SystemSetting { Key = "AdminSecret", Value = initialSecret });
+        await db.SaveChangesAsync();
+        Console.WriteLine("Initial AdminSecret seeded into database.");
+    }
     
     // Manual Migration for ChatMessages if not exists
     var conn = db.Database.GetDbConnection();
