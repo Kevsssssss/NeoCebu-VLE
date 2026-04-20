@@ -26,18 +26,18 @@ public class TeacherService : ITeacherService
         _encryptionKey = configuration["Jwt:Key"] ?? "Default_Fallback_Key_32_Chars_Long!!";
     }
 
-    public async Task<ProvisionStudentResponse> ProvisionStudentAsync(ProvisionStudentRequest request, string teacherId)
+    public async Task<ProvisionStudentResponse> ProvisionStudentAsync(ProvisionStudentRequest request, string teacherId, bool isAdmin = false)
     {
-        Console.WriteLine($"[DEBUG] Provisioning student: {request.Email} for classroom: {request.ClassroomId} by teacher: {teacherId}");
+        Console.WriteLine($"[DEBUG] Provisioning student: {request.Email} for classroom: {request.ClassroomId} by teacher: {teacherId} (Admin: {isAdmin})");
 
-        // 1. Verify classroom belongs to teacher
+        // 1. Verify classroom belongs to teacher (Admins bypass this)
         var classroom = await _dbContext.Classrooms
-            .FirstOrDefaultAsync(c => c.Id == request.ClassroomId && c.TeacherId == teacherId);
+            .FirstOrDefaultAsync(c => c.Id == request.ClassroomId && (c.TeacherId == teacherId || isAdmin));
         
         if (classroom == null) 
         {
             Console.WriteLine("[DEBUG] Classroom not found or does not belong to teacher.");
-            throw new UnauthorizedAccessException("Teacher does not own this classroom.");
+            throw new UnauthorizedAccessException("Unauthorized to provision for this classroom.");
         }
 
         // 2. Check if student already exists
@@ -109,10 +109,11 @@ public class TeacherService : ITeacherService
         return new ProvisionStudentResponse(student.Id, payload);
     }
 
-    public async Task<string?> GetStudentQrAsync(string studentId, string teacherId)
+    public async Task<string?> GetStudentQrAsync(string studentId, string teacherId, bool isAdmin = false)
     {
         // Security check: Only allow if the teacher owns a classroom where this student is enrolled
-        var isAuthorized = await _dbContext.Enrollments
+        // Admins bypass this and have global visibility
+        var isAuthorized = isAdmin || await _dbContext.Enrollments
             .AnyAsync(e => e.StudentId == studentId && e.Classroom.TeacherId == teacherId);
 
         if (!isAuthorized) return null;

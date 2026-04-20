@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/Auth/LoginPage';
+import AdminLoginPage from './pages/Auth/AdminLoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import StudentLoginPage from './pages/Auth/StudentLoginPage';
 import Dashboard from './pages/Dashboard/Dashboard';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import ClassroomHub from './pages/Classroom/ClassroomHub';
 import './styles/global.css';
 
@@ -20,6 +22,12 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <>{children}</>;
 };
 
+const DashboardSwitcher: React.FC = () => {
+  const { user } = useAuth();
+  if (user?.isAdmin) return <Navigate to="/admin" />;
+  return <Dashboard />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -27,6 +35,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin-login" element={<AdminLoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/student-login" element={<StudentLoginPage />} />
           
@@ -34,7 +43,16 @@ function App() {
             path="/dashboard" 
             element={
               <PrivateRoute>
-                <Dashboard />
+                <DashboardSwitcher />
+              </PrivateRoute>
+            } 
+          />
+          
+          <Route 
+            path="/admin" 
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
               </PrivateRoute>
             } 
           />

@@ -45,8 +45,11 @@ public class ChatHub : Hub
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) throw new HubException("Unauthorized.");
 
+        var isAdmin = Context.User?.IsInRole("Admin") ?? false;
+
         // Zero Trust: Verify enrollment before allowing to join the SignalR group
-        var isAuthorized = await _dbContext.Classrooms
+        // Admins can join ANY classroom
+        var isAuthorized = isAdmin || await _dbContext.Classrooms
             .AnyAsync(c => c.Id == classroomId && 
                            (c.TeacherId == userId || 
                             c.Students.Any(s => s.StudentId == userId)));
@@ -58,17 +61,21 @@ public class ChatHub : Hub
 
         await Groups.AddToGroupAsync(Context.ConnectionId, classroomIdStr);
         
-        lock (OnlineUsers)
+        // Only track non-admin users to keep admin presence "hidden" from student lists
+        if (!isAdmin)
         {
-            if (!OnlineUsers.ContainsKey(classroomIdStr))
+            lock (OnlineUsers)
             {
-                OnlineUsers[classroomIdStr] = new HashSet<string>();
+                if (!OnlineUsers.ContainsKey(classroomIdStr))
+                {
+                    OnlineUsers[classroomIdStr] = new HashSet<string>();
+                }
+                OnlineUsers[classroomIdStr].Add(userId);
+                ConnectionToClassroom[Context.ConnectionId] = classroomIdStr;
             }
-            OnlineUsers[classroomIdStr].Add(userId);
-            ConnectionToClassroom[Context.ConnectionId] = classroomIdStr;
-        }
 
-        await Clients.Group(classroomIdStr).SendAsync("UserStatusChanged", userId, true);
+            await Clients.Group(classroomIdStr).SendAsync("UserStatusChanged", userId, true);
+        }
         
         // Notify the joining user if a video call is already active
         lock (ActiveVideoSessions)
@@ -78,6 +85,21 @@ public class ChatHub : Hub
                 Clients.Caller.SendAsync("VideoCallStatusChanged", true);
             }
         }
+    }
+
+    public async Task KickUser(string classroomIdStr, string targetUserId)
+    {
+        var isAdmin = Context.User?.IsInRole("Admin") ?? false;
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        // Verify the caller is either Admin or the Teacher of this classroom
+        var isAuthorized = isAdmin || await _dbContext.Classrooms
+            .AnyAsync(c => c.Id == Guid.Parse(classroomIdStr) && c.TeacherId == userId);
+
+        if (!isAuthorized) throw new HubException("Only teachers or admins can kick users.");
+
+        // Send a direct signal to the target user to disconnect and redirect
+        await Clients.User(targetUserId).SendAsync("KickedFromRoom", classroomIdStr);
     }
 
     public async Task StartVideoSession(string classroomIdStr)
@@ -101,14 +123,15 @@ public class ChatHub : Hub
         var isStudentClaim = Context.User?.FindFirst("is_student")?.Value 
                            ?? Context.User?.FindFirst(c => c.Type.EndsWith("is_student"))?.Value;
         
-        bool isTeacher = isStudentClaim == "false";
+        var isAdmin = Context.User?.IsInRole("Admin") ?? false;
+        bool isTeacher = isStudentClaim == "false" || isAdmin;
 
-        Console.WriteLine($"[DEBUG] User: {userId}, isStudentClaim: '{isStudentClaim}', IsTeacher: {isTeacher}");
+        Console.WriteLine($"[DEBUG] User: {userId}, isStudentClaim: '{isStudentClaim}', IsTeacher: {isTeacher}, IsAdmin: {isAdmin}");
 
         if (!isTeacher) 
         {
-            Console.WriteLine($"[DEBUG] Access denied: User is not a teacher.");
-            throw new HubException("Only teachers can start video sessions.");
+            Console.WriteLine($"[DEBUG] Access denied: User is not a teacher or admin.");
+            throw new HubException("Only teachers or admins can start video sessions.");
         }
 
         lock (ActiveVideoSessions)
@@ -119,15 +142,16 @@ public class ChatHub : Hub
         Console.WriteLine($"[DEBUG] Video session started for {classroomIdStr}. Notifying group.");
 
         await Clients.Group(classroomIdStr).SendAsync("VideoCallStatusChanged", true);
-        await Clients.Group(classroomIdStr).SendAsync("ReceiveMessage", "System", "A teacher has started a video call.", true, "system", false, null, null);
+        await Clients.Group(classroomIdStr).SendAsync("ReceiveMessage", "System", "A secure video call has started.", true, "system", false, null, null, isAdmin);
     }
 
     public async Task EndVideoSession(string classroomIdStr)
     {
         var isStudentClaim = Context.User?.FindFirst("is_student")?.Value;
-        bool isTeacher = isStudentClaim == "false";
+        var isAdmin = Context.User?.IsInRole("Admin") ?? false;
+        bool isTeacher = isStudentClaim == "false" || isAdmin;
 
-        if (!isTeacher) throw new HubException("Only teachers can end video sessions.");
+        if (!isTeacher) throw new HubException("Only teachers or admins can end video sessions.");
 
         lock (ActiveVideoSessions)
         {
@@ -147,7 +171,13 @@ public class ChatHub : Hub
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
         
         var isStudentClaim = Context.User?.FindFirst("is_student")?.Value;
-        bool isTeacher = isStudentClaim == "false";
+        // Robust Admin check: check role manager OR claims
+        var isAdmin = Context.User?.IsInRole("Admin") ?? 
+                      Context.User?.HasClaim(ClaimTypes.Role, "Admin") ?? false;
+        
+        bool isTeacher = isStudentClaim == "false" || isAdmin;
+
+        Console.WriteLine($"[ChatHub] Message from {userName} (Admin: {isAdmin}, Teacher: {isTeacher})");
 
         // Persistence: Save to DB
         _dbContext.ChatMessages.Add(new ChatMessage
@@ -164,7 +194,7 @@ public class ChatHub : Hub
         await _dbContext.SaveChangesAsync();
 
         // Room Isolation: Only send to the specific classroom group
-        await Clients.Group(classroomIdStr).SendAsync("ReceiveMessage", userName, sanitizedMessage, isTeacher, userId, isFile, fileName, fileUrl);
+        await Clients.Group(classroomIdStr).SendAsync("ReceiveMessage", userName, sanitizedMessage, isTeacher, userId, isFile, fileName, fileUrl, isAdmin);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

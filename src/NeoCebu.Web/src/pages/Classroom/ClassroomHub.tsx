@@ -53,12 +53,20 @@ const ClassroomHub: React.FC = () => {
     }
   }, [user?.isStudent]);
 
-  const { messages, sendMessage, startVideoSession, endVideoSession, connectionState } = useSignalR(
+  const handleKicked = useCallback((roomId: string) => {
+    if (roomId === classroomId) {
+      alert("You have been kicked from this room by a moderator.");
+      navigate('/dashboard');
+    }
+  }, [classroomId, navigate]);
+
+  const { messages, sendMessage, startVideoSession, endVideoSession, kickUser, connectionState } = useSignalR(
     classroomId || '', 
     token, 
     handleUserStatusChanged, 
     initialMessages,
-    handleVideoCallStatusChanged
+    handleVideoCallStatusChanged,
+    handleKicked
   );
 
   // Inactivity Timer Logic
@@ -646,7 +654,7 @@ const ClassroomHub: React.FC = () => {
                       </div>
                     </div>
 
-                    {!user?.isStudent && (
+                    {(!user?.isStudent || user?.isAdmin) && (
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button
                           onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
@@ -674,12 +682,26 @@ const ClassroomHub: React.FC = () => {
                               <QrCode size={16} /> View Neural ID
                             </button>
                             <button
-                              onClick={() => handleUnenroll(s.id, s.userName)}
+                              onClick={async () => {
+                                if (window.confirm(`Kick ${s.userName} from this session?`)) {
+                                  await kickUser(s.id);
+                                  setOpenMenuId(null);
+                                }
+                              }}
                               className="btn-ghost"
-                              style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.8rem', padding: '0.5rem 0.625rem', color: 'var(--error)' }}
+                              style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.8rem', padding: '0.5rem 0.625rem', color: 'var(--warning)' }}
                             >
-                              <UserMinus size={16} /> Remove Student
+                              <UserMinus size={16} /> Kick from Room
                             </button>
+                            {(!user?.isStudent && !user?.isAdmin) && (
+                              <button
+                                onClick={() => handleUnenroll(s.id, s.userName)}
+                                className="btn-ghost"
+                                style={{ width: '100%', justifyContent: 'flex-start', fontSize: '0.8rem', padding: '0.5rem 0.625rem', color: 'var(--error)' }}
+                              >
+                                <Trash2 size={16} /> Remove Student
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -804,15 +826,15 @@ const ChatPanel: React.FC<{
             {!isOwn && !isSystem && (
               <span style={{
                 fontSize: '0.7rem',
-                color: msg.isTeacher ? 'var(--accent)' : 'var(--text-muted)',
-                fontWeight: msg.isTeacher ? 600 : 400,
+                color: (msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin') ? 'var(--error)' : msg.isTeacher ? 'var(--accent)' : 'var(--text-muted)',
+                fontWeight: (msg.isTeacher || msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin') ? 600 : 400,
                 paddingLeft: '0.2rem',
               }}>
-                {msg.user}{msg.isTeacher && ' · Teacher'}
+                {msg.user}{(msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin' || msg.isTeacher) && ' · '}{(msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin') ? 'Admin' : (msg.isTeacher ? 'Teacher' : '')}
               </span>
             )}
             <div className={`msg-bubble ${isOwn ? 'mine' : isSystem ? 'system' : 'theirs'}`}
-              style={msg.isTeacher && !isOwn ? { border: '0.5px solid var(--border-accent)' } : {}}>
+              style={(msg.isTeacher || msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin') && !isOwn ? { border: (msg.isAdmin || msg.IsAdmin || msg.user === 'SystemAdmin') ? '0.5px solid rgba(239,68,68,0.3)' : '0.5px solid var(--border-accent)' } : {}}>
               {msg.isFile ? (
                 msg.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                   <img

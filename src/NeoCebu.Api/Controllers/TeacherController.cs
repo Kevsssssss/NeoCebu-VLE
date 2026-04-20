@@ -117,7 +117,8 @@ public class TeacherController : ControllerBase
         var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (teacherId == null) return Unauthorized();
 
-        var qrPayload = await _teacherService.GetStudentQrAsync(studentId, teacherId);
+        var isAdmin = User.IsInRole("Admin");
+        var qrPayload = await _teacherService.GetStudentQrAsync(studentId, teacherId, isAdmin);
         if (qrPayload == null) return Unauthorized("Unauthorized to view this student's QR payload.");
 
         return Ok(new { qrPayload });
@@ -129,9 +130,10 @@ public class TeacherController : ControllerBase
         var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (teacherId == null) return Unauthorized();
 
+        var isAdmin = User.IsInRole("Admin");
         try
         {
-            var response = await _teacherService.ProvisionStudentAsync(request, teacherId);
+            var response = await _teacherService.ProvisionStudentAsync(request, teacherId, isAdmin);
             return Ok(response);
         }
         catch (UnauthorizedAccessException ex)

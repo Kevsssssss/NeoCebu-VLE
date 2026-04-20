@@ -5,6 +5,7 @@ interface User {
   userName: string;
   email: string;
   isStudent: boolean;
+  isAdmin: boolean;
 }
 
 interface AuthContextType {
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('token', token);
     setToken(token);
     
-    // Decode JWT to get user info (simplified for now)
+    // Decode JWT to get user info
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -40,11 +41,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).join(''));
 
     const payload = JSON.parse(jsonPayload);
+    
+    // Extract role - can be in 'role' or standard URI claim
+    const roleClaim = payload['role'] || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    const isAdmin = Array.isArray(roleClaim) 
+      ? roleClaim.includes('Admin') 
+      : roleClaim === 'Admin';
+
     const userData: User = {
       id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
       userName: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
       email: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
-      isStudent: payload['is_student'] === 'true'
+      isStudent: payload['is_student'] === 'true',
+      isAdmin: isAdmin
     };
 
     localStorage.setItem('user', JSON.stringify(userData));

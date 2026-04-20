@@ -90,20 +90,31 @@ public class ClassroomController : ControllerBase
             .Where(m => m.ClassroomId == classroomId)
             .OrderByDescending(m => m.Timestamp)
             .Take(50)
-            .Select(m => new
+            .ToListAsync();
+
+        var result = new List<object>();
+        var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
+
+        foreach (var m in messages.OrderBy(m => m.Timestamp))
+        {
+            var user = m.User;
+            var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+            
+            result.Add(new
             {
-                User = m.User.UserName,
+                User = user.UserName,
                 Text = m.Text,
                 IsTeacher = m.IsTeacher,
                 UserId = m.UserId,
                 Timestamp = m.Timestamp,
                 IsFile = m.IsFile,
                 FileName = m.FileName,
-                FileUrl = m.FileUrl
-            })
-            .ToListAsync();
+                FileUrl = m.FileUrl,
+                isAdmin = isAdmin
+            });
+        }
 
-        return Ok(messages.OrderBy(m => m.Timestamp));
+        return Ok(result);
     }
 
     [Authorize(Policy = "ClassroomPolicy")]

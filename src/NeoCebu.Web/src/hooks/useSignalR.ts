@@ -5,11 +5,12 @@ export const useSignalR = (
   classroomId: string, 
   token: string | null, 
   onUserStatusChanged?: (userId: string, isOnline: boolean) => void,
-  initialMessages: { user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string }[] = [],
-  onVideoCallStatusChanged?: (isActive: boolean) => void
+  initialMessages: { user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string, isAdmin?: boolean }[] = [],
+  onVideoCallStatusChanged?: (isActive: boolean) => void,
+  onKicked?: (roomId: string) => void
 ) => {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [messages, setMessages] = useState<{ user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string }[]>([]);
+  const [messages, setMessages] = useState<{ user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string, isAdmin?: boolean }[]>([]);
 
   useEffect(() => {
     setMessages(initialMessages);
@@ -33,8 +34,8 @@ export const useSignalR = (
           console.log("SignalR: Connection started. Joining classroom:", classroomId);
           connection.invoke('JoinClassroom', classroomId);
           
-          connection.on('ReceiveMessage', (user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string) => {
-            setMessages(prev => [...prev, { user, text, isTeacher, userId, isFile, fileName, fileUrl }]);
+          connection.on('ReceiveMessage', (user: string, text: string, isTeacher?: boolean, userId?: string, isFile?: boolean, fileName?: string, fileUrl?: string, isAdmin?: boolean) => {
+            setMessages(prev => [...prev, { user, text, isTeacher, userId, isFile, fileName, fileUrl, isAdmin }]);
           });
 
           connection.on('UserStatusChanged', (userId: string, isOnline: boolean) => {
@@ -48,6 +49,12 @@ export const useSignalR = (
               onVideoCallStatusChanged(isActive);
             }
           });
+
+          connection.on('KickedFromRoom', (roomId: string) => {
+            if (onKicked) {
+              onKicked(roomId);
+            }
+          });
         })
         .catch(e => console.error('SignalR: Connection failed: ', e));
     }
@@ -57,10 +64,11 @@ export const useSignalR = (
         connection.off('ReceiveMessage');
         connection.off('UserStatusChanged');
         connection.off('VideoCallStatusChanged');
+        connection.off('KickedFromRoom');
         connection.stop();
       }
     };
-  }, [connection, classroomId, onUserStatusChanged, onVideoCallStatusChanged]);
+  }, [connection, classroomId, onUserStatusChanged, onVideoCallStatusChanged, onKicked]);
 
   const sendMessage = useCallback(async (message: string, isFile: boolean = false, fileName?: string, fileUrl?: string) => {
     if (connection) {
@@ -83,5 +91,11 @@ export const useSignalR = (
     }
   }, [connection, classroomId]);
 
-  return { messages, sendMessage, startVideoSession, endVideoSession, connectionState: connection?.state };
+  const kickUser = useCallback(async (targetUserId: string) => {
+    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+      await connection.invoke('KickUser', classroomId, targetUserId);
+    }
+  }, [connection, classroomId]);
+
+  return { messages, sendMessage, startVideoSession, endVideoSession, kickUser, connectionState: connection?.state };
 };

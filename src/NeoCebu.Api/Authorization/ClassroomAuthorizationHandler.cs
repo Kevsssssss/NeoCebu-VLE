@@ -40,6 +40,13 @@ public class ClassroomAuthorizationHandler : AuthorizationHandler<ClassroomRequi
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return;
 
+        // Admins have global access to any classroom for monitoring
+        if (context.User.IsInRole("Admin"))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
         // Verify if user is the Teacher of the classroom or an Enrolled Student
         var isAuthorized = await _dbContext.Classrooms
             .AnyAsync(c => c.Id == classroomId && 

@@ -7,6 +7,7 @@ using NeoCebu.Core.Interfaces;
 using NeoCebu.Infrastructure.Data;
 using NeoCebu.Infrastructure.Services;
 using System.Text;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -99,7 +100,64 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NeoCebuDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    
     db.Database.EnsureCreated();
+    
+    // Seed Roles
+    string[] roles = { "Admin", "Teacher", "Student" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    // Seed Default Admin
+    var adminEmail = "admin@neocebu.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser 
+        { 
+            UserName = "SystemAdmin", 
+            Email = adminEmail,
+            EmailConfirmed = true,
+            IsStudent = false
+        };
+        var result = await userManager.CreateAsync(adminUser, "Admin123!");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+            Console.WriteLine("Admin user created with password: Admin123!");
+        }
+        else
+        {
+            Console.WriteLine($"Failed to create admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+    }
+    else
+    {
+        // Ensure existing admin has the role and is not a student
+        adminUser.IsStudent = false;
+        await userManager.UpdateAsync(adminUser);
+        
+        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+            Console.WriteLine("Admin role added to existing user.");
+        }
+
+        // Force reset password in Development to ensure access
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+        var resetResult = await userManager.ResetPasswordAsync(adminUser, resetToken, "Admin123!");
+        if (resetResult.Succeeded)
+        {
+            Console.WriteLine("Admin password sync successful.");
+        }
+    }
     
     // Manual Migration for ChatMessages if not exists
     var conn = db.Database.GetDbConnection();

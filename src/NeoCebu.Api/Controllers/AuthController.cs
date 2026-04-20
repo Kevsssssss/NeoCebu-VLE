@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
         student.LastSeen = DateTime.UtcNow;
         await _userManager.UpdateAsync(student);
 
-        var token = GenerateJwtToken(student);
+        var token = await GenerateJwtToken(student);
         return Ok(token);
     }
 
@@ -63,26 +63,58 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> TeacherLogin([FromBody] LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null || user.IsStudent) return Unauthorized("Invalid credentials.");
+        if (user == null || user.IsStudent) return Unauthorized(new { message = "Invalid credentials." });
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!result.Succeeded) return Unauthorized("Invalid credentials.");
+        if (!result.Succeeded) return Unauthorized(new { message = "Invalid credentials." });
 
         // Reset LastSeen on successful login to prevent immediate session timeout
         user.LastSeen = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtToken(user);
+        return Ok(token);
+    }
+
+    [HttpPost("admin-login")]
+    public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request)
+    {
+        Console.WriteLine($"[AdminLogin] Attempt for: {request.Email}");
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null) 
+        {
+            Console.WriteLine("[AdminLogin] User not found by email.");
+            return Unauthorized(new { message = "Invalid credentials." });
+        }
+
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        if (!isAdmin) 
+        {
+            Console.WriteLine("[AdminLogin] User is not in Admin role.");
+            return Unauthorized(new { message = "Access denied. Not an administrator." });
+        }
+
+        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+        if (!result.Succeeded) 
+        {
+            Console.WriteLine($"[AdminLogin] Password check failed for {request.Email}. Locked out: {result.IsLockedOut}");
+            return Unauthorized(new { message = "Invalid credentials." });
+        }
+
+        Console.WriteLine("[AdminLogin] Success.");
+        user.LastSeen = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        var token = await GenerateJwtToken(user);
         return Ok(token);
     }
 
     [HttpPost("register-teacher")]
     public async Task<IActionResult> RegisterTeacher([FromBody] TeacherRegistrationRequest request)
     {
-        Console.WriteLine($"[DEBUG] Received AdminSecret: '{request.AdminSecret}'");
+        var configuredSecret = _configuration["SystemSettings:AdminSecret"] ?? "NeoCebu_Admin_2026_Secure";
         
-        // Trim to prevent accidental spaces from causing failure
-        if (request.AdminSecret?.Trim() != "NeoCebu_Admin_2026_Secure")
+        if (request.AdminSecret?.Trim() != configuredSecret)
         {
             return BadRequest(new { message = "Invalid admin authorization secret." });
         }
@@ -91,7 +123,7 @@ public class AuthController : ControllerBase
         {
             UserName = request.UserName,
             Email = request.Email,
-            IsStudent = false // Explicitly mark as Teacher
+            IsStudent = false
         };
 
         var result = await _userManager.CreateAsync(teacher, request.Password);
@@ -100,25 +132,35 @@ public class AuthController : ControllerBase
             return BadRequest(result.Errors);
         }
 
+        await _userManager.AddToRoleAsync(teacher, "Teacher");
+
         return Ok(new { message = "Teacher account created successfully." });
     }
 
-    private AuthResponse GenerateJwtToken(ApplicationUser user)
+    private async Task<AuthResponse> GenerateJwtToken(ApplicationUser user)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
         var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
         var duration = int.Parse(jwtSettings["DurationInMinutes"] ?? "10");
         var expiration = DateTime.UtcNow.AddMinutes(duration);
 
+        var roles = await _userManager.GetRolesAsync(user);
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName ?? ""),
+            new Claim(ClaimTypes.Email, user.Email ?? ""),
+            new Claim("is_student", user.IsStudent.ToString().ToLower())
+        };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName ?? ""),
-                new Claim(ClaimTypes.Email, user.Email ?? ""),
-                new Claim("is_student", user.IsStudent.ToString().ToLower())
-            }),
+            Subject = new ClaimsIdentity(claims),
             Expires = expiration,
             Issuer = jwtSettings["Issuer"],
             Audience = jwtSettings["Audience"],

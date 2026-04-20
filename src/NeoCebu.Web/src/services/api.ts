@@ -27,10 +27,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect if we are NOT on a login page already
-    if (error.response?.status === 401 && 
+    const status = error.response?.status;
+    // Redirect on 401 (Unauthorized) or 403 (Forbidden)
+    if ((status === 401 || status === 403) && 
         !window.location.pathname.includes('/login') && 
-        !window.location.pathname.includes('/student-login')) {
+        !window.location.pathname.includes('/student-login') &&
+        !window.location.pathname.includes('/admin-login')) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

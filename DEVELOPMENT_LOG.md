@@ -62,4 +62,20 @@
     - **Student Download Access**: Created a card-based library where students can view and download files posted by their teachers.
 
 ---
-**Current solution is build-ready and network-optimized.**
+---
+
+## Date: 2026-04-18
+### Repository Maintenance & Git Optimization
+- **Repository Maintenance & Git Optimization:**
+    - **Global .gitignore Implementation**: Created a comprehensive root `.gitignore` file following industry standards for .NET, Visual Studio, Node.js, and common build artifacts.
+    - **Build Artifact Removal**: Successfully removed tracked `bin/` and `obj/` directories across all projects.
+    - **Database Security**: Removed the SQLite database (`NeoCebu.db`) from Git tracking to prevent local test data leaks.
+
+- **Admin Infrastructure & Dashboard:**
+    - **Role-Based Access Control (RBAC)**: Integrated Identity Roles (`Admin`, `Teacher`, `Student`) and seeded a default system admin account.
+    - **Admin Dashboard Implementation**: Built a dedicated administrative interface for managing teacher accounts and monitoring system health.
+    - **Dynamic Admin Secret**: Migrated the `AdminSecret` to configuration, allowing admins to view and update the registration key from the dashboard.
+    - **Room Monitoring & Hidden Visit**: Empowered admins to "invisibly" join any active classroom. Admins are excluded from student user lists while maintaining full moderator privileges.
+    - **Moderator Kick Capability**: Implemented SignalR-based user kicking. Admins and teachers can now instantly force-disconnect any user from a live room.
+    - **Teacher Management**: Added administrative tools to list and delete teacher accounts directly from the UI.
+

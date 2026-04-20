@@ -129,6 +129,11 @@ const LoginPage: React.FC = () => {
             Student?{' '}
             <Link to="/student-login" style={{ fontWeight: 600 }}>Login via QR Code</Link>
           </p>
+          <div style={{ marginTop: '1rem', borderTop: '0.5px solid var(--border-subtle)', paddingTop: '1rem' }}>
+             <Link to="/admin-login" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
+                Administrator access &rarr;
+             </Link>
+          </div>
         </div>
       </div>
     </div>
