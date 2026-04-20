@@ -59,8 +59,8 @@ C:\NeoCebu-VLE\
    - Access from mobile using `https://<YOUR_IP>:5173`.
 
 ### Default Admin Account
-- **Username**: admin@neocebu.com
-- **Password**: Admin123!
+   **Username**: `admin@neocebu.com`
+   **Password**: `Admin123!`
 
 ## 🛡 Security Protocols
 
