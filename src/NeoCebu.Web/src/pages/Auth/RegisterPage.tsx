@@ -37,16 +37,16 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="auth-wrapper">
-      <Link to="/" style={{ position: 'fixed', top: '1.5rem', left: '1.5rem' }}>
+      <Link to="/" style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 10 }}>
         <div className="logo-mark">
           <div className="icon-wrap" style={{ width: 32, height: 32, borderRadius: 8 }}>
-            <Shield size={14} color="var(--accent)" />
+            <Shield size={16} color="var(--accent)" />
           </div>
-          <span className="wordmark" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
+          <span className="wordmark desktop-only" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
         </div>
       </Link>
 
-      <div className="card" style={{ width: '100%', maxWidth: '460px' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '480px', position: 'relative' }}>
         <div style={{ marginBottom: '2rem' }}>
           <p style={{
             fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.1em',

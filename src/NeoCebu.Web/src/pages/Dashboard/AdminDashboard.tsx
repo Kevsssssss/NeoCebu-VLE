@@ -104,10 +104,10 @@ const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex' }}>
+    <div className="dashboard-layout" style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex' }}>
 
       {/* ── Sidebar ── */}
-      <aside style={{
+      <aside className="dashboard-sidebar" style={{
         width: 260,
         flexShrink: 0,
         borderRight: '0.5px solid var(--border-subtle)',
@@ -169,8 +169,6 @@ const AdminDashboard: React.FC = () => {
                 cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { if (activeTab !== item.id) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-              onMouseLeave={e => { if (activeTab !== item.id) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
             >
               <span style={{ color: activeTab === item.id ? 'var(--accent)' : 'var(--text-muted)' }}>
                 {item.icon}
@@ -180,7 +178,7 @@ const AdminDashboard: React.FC = () => {
           ))}
         </nav>
 
-        <div style={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {/* User row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem 0.25rem' }}>
             <div style={{
@@ -203,8 +201,6 @@ const AdminDashboard: React.FC = () => {
             onClick={logout}
             className="btn-ghost"
             style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--error)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             <LogOut size={15} /> Log Out
           </button>
@@ -212,7 +208,7 @@ const AdminDashboard: React.FC = () => {
       </aside>
 
       {/* ── Main ── */}
-      <main style={{ marginLeft: 260, flex: 1, padding: '2.5rem 2.5rem', minHeight: '100vh' }}>
+      <main className="dashboard-main" style={{ marginLeft: 260, flex: 1, padding: '2.5rem 2.5rem', minHeight: '100vh' }}>
 
         {/* Toast notification */}
         {message && (

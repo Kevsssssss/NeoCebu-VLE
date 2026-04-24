@@ -71,31 +71,31 @@ const Dashboard: React.FC = () => {
         background: 'rgba(5,8,15,0.85)',
         backdropFilter: 'blur(12px)',
         borderBottom: '0.5px solid var(--border-subtle)',
-        padding: '0 2rem',
-        height: '60px',
+        padding: '0 1rem',
+        height: '64px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div className="logo-mark">
           <div className="icon-wrap" style={{ width: 32, height: 32 }}>
-            <Shield size={16} color="var(--accent)" />
+            <Shield size={20} color="var(--accent)" />
           </div>
-          <span className="wordmark" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
+          <span className="wordmark desktop-only" style={{ fontSize: '1rem' }}>Neo-Cebu</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ textAlign: 'right' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ textAlign: 'right' }} className="desktop-only">
             <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{user?.userName}</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {user?.isStudent ? 'Student' : 'Educator'}
             </div>
           </div>
-          <button onClick={logout} className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-            <LogOut size={16} /> Logout
+          <button onClick={logout} className="btn-outline" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}>
+            <LogOut size={14} /> <span className="desktop-only">Logout</span>
           </button>
         </div>
       </nav>
 
-      <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '4rem' }}>
+      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
         {/* ── Page header ── */}
         <div style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
@@ -105,14 +105,14 @@ const Dashboard: React.FC = () => {
             <h1 style={{ fontSize: '1.75rem', letterSpacing: '-0.03em' }}>Virtual Classrooms</h1>
           </div>
           {!user?.isStudent && (
-            <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+            <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>
               <Plus size={16} /> New Classroom
             </button>
           )}
         </div>
 
         {/* ── Stats row ── */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
           {[
             { label: 'Active Rooms', value: classrooms.length },
             { label: 'Role', value: user?.isStudent ? 'Student' : 'Educator' },
@@ -121,11 +121,12 @@ const Dashboard: React.FC = () => {
               background: 'var(--bg-card)',
               border: '0.5px solid var(--border-subtle)',
               borderRadius: 'var(--radius-md)',
-              padding: '1rem 1.5rem',
-              minWidth: 120,
+              padding: '0.875rem 1.25rem',
+              flex: '1',
+              minWidth: '140px',
             }}>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>{s.label}</div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700 }}>{s.value}</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>{s.label}</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -148,11 +149,7 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '1rem',
-          }}>
+          <div className="grid-responsive">
             {classrooms.map(c => (
               <div
                 key={c.id}

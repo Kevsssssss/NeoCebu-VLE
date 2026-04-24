@@ -31,18 +31,19 @@ const LoginPage: React.FC = () => {
     <div className="auth-wrapper">
       {/* Back to landing */}
       <Link to="/" style={{
-        position: 'fixed', top: '1.5rem', left: '1.5rem',
+        position: 'absolute', top: '1.5rem', left: '1.5rem',
         display: 'flex', alignItems: 'center', gap: '0.5rem',
+        zIndex: 10,
       }}>
         <div className="logo-mark">
           <div className="icon-wrap" style={{ width: 32, height: 32, borderRadius: 8 }}>
-            <Shield size={14} color="var(--accent)" />
+            <Shield size={16} color="var(--accent)" />
           </div>
-          <span className="wordmark" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
+          <span className="wordmark desktop-only" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
         </div>
       </Link>
 
-      <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <p style={{

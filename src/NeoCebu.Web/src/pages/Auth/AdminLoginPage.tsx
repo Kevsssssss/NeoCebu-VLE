@@ -37,8 +37,9 @@ const AdminLoginPage: React.FC = () => {
     }}>
       {/* Back link */}
       <Link to="/login" style={{
-        position: 'fixed', top: '1.5rem', left: '1.5rem',
+        position: 'absolute', top: '1.5rem', left: '1.5rem',
         display: 'flex', alignItems: 'center', gap: '0.5rem',
+        zIndex: 10,
       }}>
         <div className="logo-mark">
           <div className="icon-wrap" style={{
@@ -46,9 +47,9 @@ const AdminLoginPage: React.FC = () => {
             background: 'rgba(239,68,68,0.12)',
             border: '0.5px solid rgba(239,68,68,0.25)',
           }}>
-            <ShieldAlert size={14} color="#f87171" />
+            <ShieldAlert size={16} color="#f87171" />
           </div>
-          <span className="wordmark" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
+          <span className="wordmark desktop-only" style={{ fontSize: '0.95rem' }}>Neo-Cebu</span>
         </div>
       </Link>
 
@@ -56,6 +57,7 @@ const AdminLoginPage: React.FC = () => {
         width: '100%',
         maxWidth: '420px',
         border: '0.5px solid rgba(239,68,68,0.18)',
+        position: 'relative',
       }}>
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
